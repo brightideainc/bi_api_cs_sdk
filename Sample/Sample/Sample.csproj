@@ -45,8 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthenticationExample.cs" />
-    <Compile Include="MasterAuthenticationExample.cs" />
+    <Content Include="AuthenticationExample.cs" />
+    <Content Include="MasterAuthenticationExample.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSOAuthenticationExample.cs" />

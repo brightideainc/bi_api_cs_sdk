@@ -14,7 +14,7 @@ namespace Sample
         string AccessToken;
         Client client;
 
-        public void AuthenticationExample()
+        public AuthenticationExample()
         {
             client = new Client("ziqi.brightideadev.com", "APIKEY");
 

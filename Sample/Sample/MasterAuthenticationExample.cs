@@ -14,7 +14,7 @@ namespace Sample
         string AccessToken;
         Client client;
 
-        public void SSOAuthenticationExample()
+        public MasterAuthenticationExample()
         {
             client = new Client("ziqi.brightideadev.com", "MASTERKEY", "SECRET");
 

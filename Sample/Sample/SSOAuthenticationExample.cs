@@ -14,12 +14,12 @@ namespace Sample
         string AccessToken;
         Client client;
 
-        public void SSOAuthenticationExample()
+        public SSOAuthenticationExample()
         {
             client = new Client("ziqi.brightideadev.com", "MASTERKEY", "SECRET");
-            string sampleUserEmail = "zjin@brightidea.com";
+            string sampleUserEmail = "zjin1@brightidea.com";
 
-            Dictionary<string, object> tokens;
+            Dictionary<string, object> tokens=null;
             try
             {
                 tokens = client.Authenticate(sampleUserEmail);
@@ -30,10 +30,10 @@ namespace Sample
                 //Create user on the fly with master account
                 Client masterClient = new Client("ziqi.brightideadev.com", "MASTERKEY", "SECRET");
                 masterClient.Authenticate();
-                Request request = new Request("member",ApiAction.CREATE);
+                Request request = new Request("member", ApiAction.CREATE);
                 request.AddParameter("screen_name", "Sample User");
                 request.AddParameter("email", sampleUserEmail);
-                Dictionary<string, object> userCreationResult = masterClient.Execute(request);
+                Dictionary<string, object> userCreationResult = masterClient.Execute(request).Deserialize<Dictionary<string, object>>();
 
                 //if auto user creation failed, handle it here.
 
@@ -41,7 +41,7 @@ namespace Sample
                 tokens = client.Authenticate(sampleUserEmail);
             }
 
-            string accessToken = (string)tokens["access_token"];
+            AccessToken = (string)tokens["access_token"];
 
             try
             {
@@ -52,10 +52,12 @@ namespace Sample
 
                 ArrayList memberList = (ArrayList)result["member_list"];
                 Console.WriteLine(memberList.Count);
+                Console.Read();
             }
             catch (Exception ex)
             {
-                //server error
+                Console.WriteLine(ex.Message);
+                Console.Read();
             }
         }
 
@@ -69,7 +71,8 @@ namespace Sample
             Dictionary<string, object> result = null;
             try
             {
-                result = client.Execute(request);
+                var response = client.Execute(request);
+                result = response.Deserialize<Dictionary<string, object>>();
             }
             catch (InvalidAccessTokenException ex)
             {

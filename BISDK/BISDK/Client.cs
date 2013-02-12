@@ -1,9 +1,10 @@
-﻿using RestSharp;
+﻿using Newtonsoft.Json.Linq;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Web.Script.Serialization;
+
 
 namespace BISDK
 {
@@ -39,7 +40,11 @@ namespace BISDK
             if(AppSecret!=null)
                 request.AddParameter("app_secret", AppSecret);
 
-            return this.Execute(request);
+            Response response = Execute(request);
+            Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
+            Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
+
+            return session;
         }
 
         public Dictionary<string, object> Authenticate(string email)
@@ -54,6 +59,8 @@ namespace BISDK
 
         public void AuthenticateWithAccessToken(string accessToken)
         {
+            if (String.IsNullOrEmpty(accessToken))
+                throw new InvalidAccessTokenException("Access token cannot be empty");
             AccessToken = accessToken;
         }
 
@@ -63,34 +70,25 @@ namespace BISDK
             request.AddParameter("app_id", AppId);
             request.AddParameter("refresh_token", RefreshToken);
 
-            Dictionary<string, object> tokens = this.Execute(request);
-            AccessToken = (string)tokens["access_token"];
-            RefreshToken = (string)tokens["refresh_token"];
+            Response response = Execute(request);
+            Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
+            Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
+            AccessToken = (string)session["access_token"];
+            RefreshToken = (string)session["refresh_token"];
 
-            return tokens;
+            return session;
         }
 
-        public Dictionary<string, object> Execute(Request req)
+        public Response Execute(Request request)
         {
-            var res = DoExecute(req);
-            Dictionary<string, object> result = DeserializeString(res.Content);
-            PostResponse(result);
-            return result;
-        }
+            ProcessRequest(request);
 
-        protected Dictionary<string, object> DeserializeString(string str)
-        {
-            JavaScriptSerializer ser = new JavaScriptSerializer();
-            Dictionary<string, object> deserializedDictionary = ser.Deserialize<Dictionary<string, object>>(str);
-            return deserializedDictionary;
-        }
+            var response = base.Execute(request);
+            Response BIResponse = new Response(response.Content);
 
-        public string ExecuteString(Request req)
-        {
-            var res = DoExecute(req);
-            Dictionary<string, object> result = DeserializeString(res.Content);
-            PostResponse(result);
-            return res.Content;
+            PostResponse(BIResponse.JObject);
+
+            return BIResponse;
         }
 
         public void ProcessRequest(Request req)
@@ -101,11 +99,11 @@ namespace BISDK
             }
         }
 
-        public byte[] DownloadData(Request req)
+        public byte[] DownloadData(Request request)
         {
-            ProcessRequest(req);
+            ProcessRequest(request);
 
-            byte[] response = base.DownloadData(req);
+            byte[] response = base.DownloadData(request);
             return response;
         }
 
@@ -117,22 +115,28 @@ namespace BISDK
             return response;
         }
 
-        protected void PostResponse(Dictionary<string, object> response)
+        protected void PostResponse(JObject response)
         {
-            if (response.ContainsKey("errorCode"))
+            if (response["errorCode"] != null)
             {
-                switch ((int)response["errorCode"])
-                { 
-                    case 1001:
-                        throw new InvalidRefreshTokenException();
-                    case 1002:
-                        throw new InvalidAccessTokenException();
-                    case 1003:
-                        throw new MemberNotExistException();
-                    default:
-                        throw new Exception((string)response["error"]);
-                }
+                ProcessError((int)response["errorCode"], (string)response["message"]);
             }
+        }
+
+        protected void ProcessError(int errorCode, string message)
+        {
+            switch (errorCode)
+            {
+                case 1001:
+                    throw new InvalidRefreshTokenException(message);
+                case 1002:
+                    throw new InvalidAccessTokenException(message);
+                case 13:
+                    throw new MemberNotExistException(message);
+                default:
+                    throw new Exception(message);
+            }
+            
         }
 
     }
