@@ -54,5 +54,10 @@ namespace BISDK
 
         }
 
+        public Request(string function)
+            : base("api3/" + function)
+        {
+
+        }
     }
 }

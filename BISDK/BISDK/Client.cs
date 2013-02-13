@@ -37,7 +37,7 @@ namespace BISDK
 
             request.AddParameter("password", password);
 
-            if(AppSecret!=null)
+            if(!String.IsNullOrEmpty(AppSecret))
                 request.AddParameter("app_secret", AppSecret);
 
             Response response = Execute(request);
