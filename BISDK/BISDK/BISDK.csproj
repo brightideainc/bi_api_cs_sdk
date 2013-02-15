@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Exception.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="PersistentDataManager.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Response.cs" />

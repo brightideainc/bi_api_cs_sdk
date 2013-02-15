@@ -10,8 +10,6 @@ namespace Sample
 {
     class MasterAuthenticationExample
     {
-        string RefreshToken;
-        string AccessToken;
         Client client;
 
         public MasterAuthenticationExample()
@@ -25,10 +23,10 @@ namespace Sample
 
             try
             {
-                client.AuthenticateWithAccessToken(AccessToken);
+                client.AuthenticateWithAccessToken(accessToken);
 
                 Request request = new Request("member", ApiAction.INDEX);
-                Dictionary<string, object> result = Execute(request);
+                Dictionary<string, object> result = client.Execute(request).Deserialize<Dictionary<string, object>>();
 
                 ArrayList memberList = (ArrayList)result["member_list"];
                 Console.WriteLine(memberList.Count);
@@ -39,32 +37,5 @@ namespace Sample
             }
         }
 
-        public Dictionary<string, object> Execute(Request request)
-        {
-            return Execute(request, false);
-        }
-
-        public Dictionary<string, object> Execute(Request request, bool retry)
-        {
-            Dictionary<string, object> result = null;
-            try
-            {
-                result = client.Execute(request);
-            }
-            catch (InvalidAccessTokenException ex)
-            {
-                RefreshAccessToken();
-                if (!retry)
-                    result = Execute(request, true);
-            }
-
-            return result;
-        }
-
-        public void RefreshAccessToken()
-        {
-            Dictionary<string, object> tokens = client.Authenticate("zjin@brightidea.com");
-            string accessToken = (string)tokens["access_token"];
-        }
     }
 }

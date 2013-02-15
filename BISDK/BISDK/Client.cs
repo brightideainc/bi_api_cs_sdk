@@ -14,6 +14,9 @@ namespace BISDK
         protected string AppSecret;
         protected string AccessToken;
         protected string RefreshToken;
+        protected string Email;
+        public PersistentDataManager PersistentDataManager;
+        public const string DefaultDomain = "ziqi.brightideadev.com";
 
         public Client(string domain, string appId, string appSecret) 
             : base("https://" + domain)
@@ -32,9 +35,10 @@ namespace BISDK
         {
             Request request = new Request("session", ApiAction.CREATE);
             request.AddParameter("app_id", AppId);
-            if(email!=null)
+            if (!String.IsNullOrEmpty(email))
                 request.AddParameter("email", email);
 
+            if (!String.IsNullOrEmpty(password))
             request.AddParameter("password", password);
 
             if(!String.IsNullOrEmpty(AppSecret))
@@ -44,11 +48,27 @@ namespace BISDK
             Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
             Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
 
+            AccessToken = (string)session["access_token"];
+            if (session.ContainsKey("refresh_token"))
+            {
+                RefreshToken = (string)session["refresh_token"];
+            }
+
+            if (PersistentDataManager != null)
+            { 
+                PersistentDataManager.SetPersistentData("access_token", AccessToken);
+                if (RefreshToken!=null)
+                {
+                    PersistentDataManager.SetPersistentData("refresh_token", RefreshToken);
+                }
+            }
+
             return session;
         }
 
         public Dictionary<string, object> Authenticate(string email)
         {
+            Email = email;
             return Authenticate(email, null);
         }
 
@@ -76,10 +96,64 @@ namespace BISDK
             AccessToken = (string)session["access_token"];
             RefreshToken = (string)session["refresh_token"];
 
+            if (PersistentDataManager != null)
+            {
+                PersistentDataManager.SetPersistentData("access_token", AccessToken);
+                PersistentDataManager.SetPersistentData("refresh_token", RefreshToken);
+            }
+
             return session;
         }
 
         public Response Execute(Request request)
+        {
+            return Execute(request, 0);
+        }
+
+        protected Response Execute(Request request, int retry)
+        {
+            Response response = null;
+            try
+            {
+                response = DoExecute(request);
+            }
+            catch (InvalidAccessTokenException ex)
+            {
+                RefreshAccessToken();
+                if (retry>0)
+                    response = Execute(request, 1);
+            }
+
+            return response;
+        }
+
+        protected void RefreshAccessToken()
+        {
+            if (!String.IsNullOrEmpty(AppSecret))
+            {
+                //for master authentication, just authenticate again to get the new access token
+                Dictionary<string, object> tokens;
+                if (!String.IsNullOrEmpty(Email))
+                    tokens = Authenticate(Email);
+                else
+                    tokens = Authenticate();
+
+                AccessToken = (string)tokens["access_token"];
+
+                if (PersistentDataManager != null)
+                {
+                    PersistentDataManager.SetPersistentData("access_token", AccessToken);
+                }
+            }
+            else
+            {
+                //for regular authentication, use refresh token to renew access token
+                RenewAccessToken(PersistentDataManager.GetPersistentData("refresh_token"));
+            }
+            
+        }
+
+        protected Response DoExecute(Request request)
         {
             ProcessRequest(request);
 
@@ -104,14 +178,6 @@ namespace BISDK
             ProcessRequest(request);
 
             byte[] response = base.DownloadData(request);
-            return response;
-        }
-
-        protected IRestResponse DoExecute(Request req)
-        {
-            ProcessRequest(req);
-
-            IRestResponse response = base.Execute(req);
             return response;
         }
 
