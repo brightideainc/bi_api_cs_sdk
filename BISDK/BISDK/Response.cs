@@ -21,8 +21,15 @@ namespace BISDK
 
         private JObject GetJObject()
         {
-            JObject result = JObject.Parse(Content);
-            return result;
+            try
+            {
+                JObject result = JObject.Parse(Content);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new FailedToParseJSONResponse(Content);
+            }
         }
 
         public T Deserialize<T>() 

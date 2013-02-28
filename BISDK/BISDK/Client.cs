@@ -12,8 +12,43 @@ namespace BISDK
     {
         protected string AppId;
         protected string AppSecret;
-        protected string AccessToken;
-        protected string RefreshToken;
+        protected string _accessToken;
+        public string AccessToken { 
+            get {
+                if(String.IsNullOrEmpty(_accessToken) && PersistentDataManager != null)
+                {
+                    _accessToken = PersistentDataManager.GetPersistentData("access_token");
+                }
+                return _accessToken;
+            }
+            set {
+                _accessToken = value;
+                if (PersistentDataManager != null)
+                {
+                    PersistentDataManager.SetPersistentData("access_token", _accessToken);
+                }
+            }
+        }
+
+        protected string _refreshToken;
+        protected string RefreshToken {
+            get
+            {
+                if (String.IsNullOrEmpty(_refreshToken) && PersistentDataManager != null)
+                {
+                    _refreshToken = PersistentDataManager.GetPersistentData("refresh_token");
+                }
+                return _refreshToken;
+            }
+            set
+            {
+                _refreshToken = value;
+                if (PersistentDataManager != null)
+                {
+                    PersistentDataManager.SetPersistentData("refresh_token", _refreshToken);
+                }
+            }
+        }
         protected string Email;
         public PersistentDataManager PersistentDataManager;
         public const string DefaultDomain = "ziqi.brightideadev.com";
@@ -41,6 +76,9 @@ namespace BISDK
             if (!String.IsNullOrEmpty(password))
             request.AddParameter("password", password);
 
+            //clear old access token
+            AccessToken = null;
+
             if(!String.IsNullOrEmpty(AppSecret))
                 request.AddParameter("app_secret", AppSecret);
 
@@ -52,15 +90,6 @@ namespace BISDK
             if (session.ContainsKey("refresh_token"))
             {
                 RefreshToken = (string)session["refresh_token"];
-            }
-
-            if (PersistentDataManager != null)
-            { 
-                PersistentDataManager.SetPersistentData("access_token", AccessToken);
-                if (RefreshToken!=null)
-                {
-                    PersistentDataManager.SetPersistentData("refresh_token", RefreshToken);
-                }
             }
 
             return session;
@@ -95,12 +124,6 @@ namespace BISDK
             Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
             AccessToken = (string)session["access_token"];
             RefreshToken = (string)session["refresh_token"];
-
-            if (PersistentDataManager != null)
-            {
-                PersistentDataManager.SetPersistentData("access_token", AccessToken);
-                PersistentDataManager.SetPersistentData("refresh_token", RefreshToken);
-            }
 
             return session;
         }
@@ -139,16 +162,11 @@ namespace BISDK
                     tokens = Authenticate();
 
                 AccessToken = (string)tokens["access_token"];
-
-                if (PersistentDataManager != null)
-                {
-                    PersistentDataManager.SetPersistentData("access_token", AccessToken);
-                }
             }
             else
             {
                 //for regular authentication, use refresh token to renew access token
-                RenewAccessToken(PersistentDataManager.GetPersistentData("refresh_token"));
+                RenewAccessToken(RefreshToken);
             }
             
         }

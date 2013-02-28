@@ -36,4 +36,12 @@ namespace BISDK
         {
         }
     }
+
+    public class FailedToParseJSONResponse : Exception
+    {
+        public FailedToParseJSONResponse(string message)
+            : base(message)
+        {
+        }
+    }
 }
