@@ -49,9 +49,9 @@ namespace BISDK
                 }
             }
         }
-        protected string Email;
+        public string Email;
         public PersistentDataManager PersistentDataManager;
-        public const string DefaultDomain = "ziqi.brightideadev.com";
+        public const string DefaultDomain = "api3.brightidea.com";
 
         public Client(string domain, string appId, string appSecret) 
             : base("https://" + domain)
@@ -142,9 +142,13 @@ namespace BISDK
             }
             catch (InvalidAccessTokenException ex)
             {
-                RefreshAccessToken();
-                if (retry>0)
+                
+                if (retry < 1)
+                {
+                    RefreshAccessToken();
                     response = Execute(request, 1);
+                }
+                    
             }
 
             return response;
@@ -211,11 +215,11 @@ namespace BISDK
         {
             switch (errorCode)
             {
-                case 1001:
+                case 1004:
                     throw new InvalidRefreshTokenException(message);
                 case 1002:
                     throw new InvalidAccessTokenException(message);
-                case 13:
+                case 1003:
                     throw new MemberNotExistException(message);
                 default:
                     throw new Exception(message);
