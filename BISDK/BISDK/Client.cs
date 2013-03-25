@@ -191,6 +191,7 @@ namespace BISDK
         {
             if (AccessToken != null)
             {
+                req.Parameters.RemoveAll(s => s.Name == "ACCESS_TOKEN");
                 req.AddHeader("ACCESS_TOKEN", AccessToken);
             }
         }
