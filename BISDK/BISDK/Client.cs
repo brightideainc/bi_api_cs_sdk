@@ -180,6 +180,10 @@ namespace BISDK
             ProcessRequest(request);
 
             var response = base.Execute(request);
+
+            if (response.ErrorException != null)
+                throw response.ErrorException;
+
             Response BIResponse = new Response(response.Content);
 
             PostResponse(BIResponse.JObject);
@@ -193,6 +197,10 @@ namespace BISDK
             {
                 req.Parameters.RemoveAll(s => s.Name == "ACCESS_TOKEN");
                 req.AddHeader("ACCESS_TOKEN", AccessToken);
+            }
+            else
+            {
+                req.AddParameter("client_id", AppId);
             }
         }
 

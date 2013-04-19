@@ -16,7 +16,8 @@ namespace BISDK
         public Response(string content)
         {
             Content = content;
-            JObject = GetJObject();
+            if(!String.IsNullOrEmpty(content))
+                JObject = GetJObject();
         }
 
         private JObject GetJObject()
