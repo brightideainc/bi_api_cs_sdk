@@ -18,13 +18,8 @@ namespace Sample
             Program p = new Program();
 
             //Normal authentication
-            //AuthenticationExample auth = new AuthenticationExample();
+            AuthenticationExample auth = new AuthenticationExample();
 
-            //Master key authentication
-            //MasterAuthenticationExample master = new MasterAuthenticationExample();
-
-            //SSO Master key authentication
-            SSOAuthenticationExample sso = new SSOAuthenticationExample();
         }
 
         

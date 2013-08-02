@@ -1,4 +1,5 @@
 ﻿using BISDK;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,40 +11,41 @@ namespace Sample
 {
     class AuthenticationExample
     {
-        string RefreshToken;
-        string AccessToken;
         Client client;
 
         public AuthenticationExample()
         {
-            client = new Client("ziqi.brightideadev.com", "APIKEY");
+            string ClientId = "ClientID";
+            string ClientSecret = "SECRET";
+            string Email = "user@brightidea.com";
+            string Password = "password";
 
-            Dictionary<string, object> tokens = client.Authenticate("zjin@brightidea.com", "1234qwer");
-            string accessToken = (string)tokens["access_token"];
-            string refreshToken = (string)tokens["refresh_token"];
+            //Create the client
+            client = new Client(ClientId, ClientSecret);
+            //client.CustomDomain="auth.brightideasandbox.com";
 
-            try
-            {
-                client.AuthenticateWithAccessToken(AccessToken);
+            //Authenticate with user's email and password
+            Dictionary<string, object> tokens = client.Authenticate(Email, Password);
 
-                Request request = new Request("member", ApiAction.INDEX);
-                Dictionary<string, object> result = client.Execute(request).Deserialize<Dictionary<string, object>>();
+            //Make API request to pull the member list
+            Request request = new Request("member", ApiAction.INDEX);
+            Response response = client.Execute(request);
 
-                ArrayList memberList = (ArrayList)result["member_list"];
-                Console.WriteLine(memberList.Count);
-            }
-            catch (InvalidUserCridentialException ex)
-            {
-                //prompt for email password (Reason, wrong email/password)
-            }
-            catch (InvalidRefreshTokenException ex)
-            {
-                //prompt for email password (Reason, reauthentication required)            
-            }
-            catch (Exception ex)
-            {
-                //server error
-            }
+            /////////////////////////////////////////
+            // There are 3 ways to read the response
+            /////////////////////////////////////////
+
+            //1.Read data by using JSON.Net
+            JObject json = response.JObject;
+            JArray memberList = (JArray)json["member_list"];
+
+            System.Diagnostics.Debug.WriteLine(memberList.Count);
+
+            //2.Read data by deserializing the json
+            Dictionary<string, object> dictionary = response.Deserialize<Dictionary<string, object>>();
+
+            //3.Get the content as string
+            string content = response.Content;
 
         }
 

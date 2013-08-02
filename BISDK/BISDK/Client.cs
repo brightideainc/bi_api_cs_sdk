@@ -10,8 +10,8 @@ namespace BISDK
 {
     public class Client : RestClient
     {
-        protected string AppId;
-        protected string AppSecret;
+        protected string ClientId;
+        protected string ClientSecret;
         protected string _accessToken;
         public string AccessToken { 
             get {
@@ -27,6 +27,7 @@ namespace BISDK
                 {
                     PersistentDataManager.SetPersistentData("access_token", _accessToken);
                 }
+                this.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(_accessToken, "Bearer");
             }
         }
 
@@ -51,89 +52,118 @@ namespace BISDK
         }
         public string Email;
         public PersistentDataManager PersistentDataManager;
-        public const string DefaultDomain = "api3.brightidea.com";
-
-        public Client(string domain, string appId, string appSecret) 
-            : base("https://" + domain)
+        public const string DefaultDomain = "https://auth.brightidea.com";
+        public bool MasterAuthentication = false;
+        public string CustomDomain
         {
-            AppId = appId;
-            AppSecret = appSecret;
+            set
+            {
+                this.BaseUrl = "https://" + value;
+            }
         }
 
-        public Client(string domain, string appId)
-            : base("https://" + domain)
+        public Client(string clientId, string clientSecret) 
+            : base(DefaultDomain)
         {
-            AppId = appId;
+            ClientId = clientId;
+            ClientSecret = clientSecret;
         }
 
         public Dictionary<string, object> Authenticate(string email, string password)
         {
-            Request request = new Request("session", ApiAction.CREATE);
-            request.AddParameter("app_id", AppId);
+            RestRequest request = new RestRequest("_oauth2/token", Method.POST);
+            request.AddParameter("client_id", ClientId);
             if (!String.IsNullOrEmpty(email))
-                request.AddParameter("email", email);
+            {
+                Email = email;
+                request.AddParameter("username", email);
+            }
+                
 
             if (!String.IsNullOrEmpty(password))
-            request.AddParameter("password", password);
+                request.AddParameter("password", password);
 
-            //clear old access token
+            request.AddParameter("grant_type", "password");
+
+            //clear old access token, we don't want access token in this request
             AccessToken = null;
+            this.Authenticator = null;
 
-            if(!String.IsNullOrEmpty(AppSecret))
-                request.AddParameter("app_secret", AppSecret);
+            if (String.IsNullOrEmpty(ClientSecret))
+                throw new Exception("Client secret cannot be blank");
+
+            request.AddParameter("client_secret", ClientSecret);
 
             Response response = Execute(request);
             Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
-            Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
 
-            AccessToken = (string)session["access_token"];
-            if (session.ContainsKey("refresh_token"))
+            AccessToken = (string)responseDictionary["access_token"];
+
+            if (responseDictionary.ContainsKey("refresh_token"))
             {
-                RefreshToken = (string)session["refresh_token"];
+                RefreshToken = (string)responseDictionary["refresh_token"];
             }
 
-            return session;
+            return responseDictionary;
         }
 
-        public Dictionary<string, object> Authenticate(string email)
+        public Dictionary<string, object> AuthenticateMaster(string email)
         {
-            Email = email;
-            return Authenticate(email, null);
+            MasterAuthentication = true;
+            
+            RestRequest request = new RestRequest("_oauth2/token", Method.POST);
+            request.AddParameter("client_id", ClientId);
+            if (!String.IsNullOrEmpty(email))
+            {
+                Email = email;
+                request.AddParameter("email", email);
+            }
+
+            request.AddParameter("grant_type", "client_credentials");
+
+            //clear old access token, we don't want access token in this request
+            AccessToken = null;
+            this.Authenticator = null;
+
+            if (!String.IsNullOrEmpty(ClientSecret))
+                request.AddParameter("client_secret", ClientSecret);
+
+            Response response = Execute(request);
+            Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
+
+            AccessToken = (string)responseDictionary["access_token"];
+
+            return responseDictionary;
         }
 
-        public Dictionary<string, object> Authenticate()
+        public Dictionary<string, object> AuthenticateMaster()
         {
-            return Authenticate(null,null);
-        }
-
-        public void AuthenticateWithAccessToken(string accessToken)
-        {
-            if (String.IsNullOrEmpty(accessToken))
-                throw new InvalidAccessTokenException("Access token cannot be empty");
-            AccessToken = accessToken;
+            return AuthenticateMaster(null);
         }
 
         public Dictionary<string, object> RenewAccessToken(string refreshToken)
         {
-            Request request = new Request("session", ApiAction.CREATE);
-            request.AddParameter("app_id", AppId);
+            RestRequest request = new RestRequest("_oauth2/token", Method.POST);
+            request.AddParameter("client_id", ClientId);
+            request.AddParameter("client_secret", ClientSecret);
             request.AddParameter("refresh_token", RefreshToken);
+            request.AddParameter("grant_type", "refresh_token");
 
             Response response = Execute(request);
             Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
-            Dictionary<string, object> session = (Dictionary<string, object>)responseDictionary["session"];
-            AccessToken = (string)session["access_token"];
-            RefreshToken = (string)session["refresh_token"];
+            AccessToken = (string)responseDictionary["access_token"];
+            
+            RefreshToken = (string)responseDictionary["refresh_token"];
 
-            return session;
+            return responseDictionary;
         }
 
-        public Response Execute(Request request)
+        public Response Execute(RestRequest request)
         {
             return Execute(request, 0);
         }
 
-        protected Response Execute(Request request, int retry)
+        protected Response Execute(RestRequest request, int retry)
         {
             Response response = null;
             try
@@ -156,16 +186,10 @@ namespace BISDK
 
         protected void RefreshAccessToken()
         {
-            if (!String.IsNullOrEmpty(AppSecret))
+            if (MasterAuthentication)
             {
                 //for master authentication, just authenticate again to get the new access token
-                Dictionary<string, object> tokens;
-                if (!String.IsNullOrEmpty(Email))
-                    tokens = Authenticate(Email);
-                else
-                    tokens = Authenticate();
-
-                AccessToken = (string)tokens["access_token"];
+                AuthenticateMaster(Email);
             }
             else
             {
@@ -175,7 +199,7 @@ namespace BISDK
             
         }
 
-        protected Response DoExecute(Request request)
+        protected Response DoExecute(RestRequest request)
         {
             ProcessRequest(request);
 
@@ -186,21 +210,29 @@ namespace BISDK
 
             Response BIResponse = new Response(response.Content);
 
-            PostResponse(BIResponse.JObject);
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && (string)BIResponse.JObject["error"] == "invalid_grant")
+            {
+                 throw new InvalidAccessTokenException("Invalid access token");
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                throw new Exception((string)BIResponse.JObject["error_description"]);
+            }
+
+            if (BIResponse.JObject["errorCode"] != null)
+            {
+                ProcessError((int)BIResponse.JObject["errorCode"], (string)BIResponse.JObject["message"]);
+            }
 
             return BIResponse;
         }
 
-        public void ProcessRequest(Request req)
+        public void ProcessRequest(RestRequest req)
         {
-            if (AccessToken != null)
+            if (AccessToken == null)
             {
-                req.Parameters.RemoveAll(s => s.Name == "ACCESS_TOKEN");
-                req.AddHeader("ACCESS_TOKEN", AccessToken);
-            }
-            else
-            {
-                req.AddParameter("client_id", AppId);
+                req.AddParameter("client_id", ClientId);
             }
         }
 
@@ -212,22 +244,10 @@ namespace BISDK
             return response;
         }
 
-        protected void PostResponse(JObject response)
-        {
-            if (response["errorCode"] != null)
-            {
-                ProcessError((int)response["errorCode"], (string)response["message"]);
-            }
-        }
-
         protected void ProcessError(int errorCode, string message)
         {
             switch (errorCode)
             {
-                case 1004:
-                    throw new InvalidRefreshTokenException(message);
-                case 1002:
-                    throw new InvalidAccessTokenException(message);
                 case 1003:
                     throw new MemberNotExistException(message);
                 default:

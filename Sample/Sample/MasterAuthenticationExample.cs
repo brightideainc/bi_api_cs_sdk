@@ -14,27 +14,17 @@ namespace Sample
 
         public MasterAuthenticationExample()
         {
-            client = new Client("ziqi.brightideadev.com", "MASTERKEY", "SECRET");
+            client = new Client("MASTERKEY", "SECRET");
 
             Dictionary<string, object> tokens;
-            tokens = client.Authenticate();
+            tokens = client.AuthenticateMaster();
 
-            string accessToken = (string)tokens["access_token"];
+            Request request = new Request("member", ApiAction.INDEX);
+            Dictionary<string, object> result = client.Execute(request).Deserialize<Dictionary<string, object>>();
 
-            try
-            {
-                client.AuthenticateWithAccessToken(accessToken);
+            ArrayList memberList = (ArrayList)result["member_list"];
+            Console.WriteLine(memberList.Count);
 
-                Request request = new Request("member", ApiAction.INDEX);
-                Dictionary<string, object> result = client.Execute(request).Deserialize<Dictionary<string, object>>();
-
-                ArrayList memberList = (ArrayList)result["member_list"];
-                Console.WriteLine(memberList.Count);
-            }
-            catch (Exception ex)
-            {
-                //server error
-            }
         }
 
     }
