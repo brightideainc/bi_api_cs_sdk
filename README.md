@@ -22,3 +22,5 @@ C# SDK for the new API
     JArray memberList = (JArray)json["member_list"];
     int memberCount = memberList.Count
     
+## Sample Code:
+* Please reference the sample project within this SDK.
