@@ -274,5 +274,22 @@ namespace BISDK
             
         }
 
+        public bool LoadPersistentData()
+        {
+            String accessToken = AccessToken;
+            String refreshToken = RefreshToken;
+
+            if (String.IsNullOrEmpty(accessToken))
+            {
+                return false;
+            }
+            else
+            {
+                this.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(accessToken);
+            }
+
+            return true;
+        }
+
     }
 }
