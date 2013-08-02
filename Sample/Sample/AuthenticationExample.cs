@@ -25,7 +25,7 @@ namespace Sample
             //client.CustomDomain="auth.brightideasandbox.com";
 
             //Authenticate with user's email and password
-            Dictionary<string, object> tokens = client.Authenticate(Email, Password);
+            Response authResponse = client.Authenticate(Email, Password);
 
             //Make API request to pull the member list
             Request request = new Request("member", ApiAction.INDEX);

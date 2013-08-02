@@ -16,8 +16,7 @@ namespace Sample
         {
             client = new Client("MASTERKEY", "SECRET");
 
-            Dictionary<string, object> tokens;
-            tokens = client.AuthenticateMaster();
+            Response authResponse = client.AuthenticateMaster();
 
             Request request = new Request("member", ApiAction.INDEX);
             Dictionary<string, object> result = client.Execute(request).Deserialize<Dictionary<string, object>>();

@@ -69,7 +69,7 @@ namespace BISDK
             ClientSecret = clientSecret;
         }
 
-        public Dictionary<string, object> Authenticate(string email, string password)
+        public Response Authenticate(string email, string password)
         {
             RestRequest request = new RestRequest("_oauth2/token", Method.POST);
             request.AddParameter("client_id", ClientId);
@@ -95,19 +95,31 @@ namespace BISDK
             request.AddParameter("client_secret", ClientSecret);
 
             Response response = Execute(request);
-            Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
+            JObject responseObject = response.JObject;
 
-            AccessToken = (string)responseDictionary["access_token"];
+            AccessToken = (string)responseObject["access_token"];
 
-            if (responseDictionary.ContainsKey("refresh_token"))
+
+            if (responseObject["refresh_token"]!=null)
             {
-                RefreshToken = (string)responseDictionary["refresh_token"];
+                RefreshToken = (string)responseObject["refresh_token"];
             }
 
-            return responseDictionary;
+            if (responseObject["systems"] != null)
+            {
+                JArray Systems = (JArray)responseObject["systems"];
+                if (Systems.Count > 0)
+                {
+                    this.BaseUrl = "https://" + Systems[0]["host_name"];
+                }
+            }
+            
+            
+
+            return response;
         }
 
-        public Dictionary<string, object> AuthenticateMaster(string email)
+        public Response AuthenticateMaster(string email)
         {
             MasterAuthentication = true;
             
@@ -129,14 +141,14 @@ namespace BISDK
                 request.AddParameter("client_secret", ClientSecret);
 
             Response response = Execute(request);
-            Dictionary<string, object> responseDictionary = response.Deserialize<Dictionary<string, object>>();
+            JObject responseObject = response.JObject;
 
-            AccessToken = (string)responseDictionary["access_token"];
+            AccessToken = (string)responseObject["access_token"];
 
-            return responseDictionary;
+            return response;
         }
 
-        public Dictionary<string, object> AuthenticateMaster()
+        public Response AuthenticateMaster()
         {
             return AuthenticateMaster(null);
         }

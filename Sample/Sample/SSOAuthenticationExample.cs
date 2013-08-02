@@ -17,10 +17,9 @@ namespace Sample
             client = new Client("MASTERKEY", "SECRET");
             string sampleUserEmail = "user@brightidea.com";
 
-            Dictionary<string, object> tokens=null;
             try
             {
-                tokens = client.AuthenticateMaster(sampleUserEmail);
+                Response authResponse = client.AuthenticateMaster(sampleUserEmail);
 
             }
             catch (MemberNotExistException ex)
@@ -36,7 +35,7 @@ namespace Sample
                 //if auto user creation failed, handle it here.
 
                 //try authenticate again
-                tokens = client.AuthenticateMaster(sampleUserEmail);
+                Response authResponse = client.AuthenticateMaster(sampleUserEmail);
             }
 
 
