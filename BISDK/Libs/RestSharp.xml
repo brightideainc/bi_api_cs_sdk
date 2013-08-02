@@ -87,7 +87,7 @@
         </member>
         <member name="F:RestSharp.OAuth2AuthorizationRequestHeaderAuthenticator._authorizationValue">
             <summary>
-            Stores the Authorization header value as "[tokenType] accessToken". used for performance.
+            Stores the Authoriztion header value as "OAuth accessToken". used for performance.
             </summary>
         </member>
         <member name="M:RestSharp.OAuth2AuthorizationRequestHeaderAuthenticator.#ctor(System.String)">
@@ -96,17 +96,6 @@
             </summary>
             <param name="accessToken">
             The access token.
-            </param>
-        </member>
-        <member name="M:RestSharp.OAuth2AuthorizationRequestHeaderAuthenticator.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:RestSharp.OAuth2AuthorizationRequestHeaderAuthenticator"/> class.
-            </summary>
-            <param name="accessToken">
-            The access token.
-            </param>
-            <param name="tokenType">
-            The token type.
             </param>
         </member>
         <member name="F:RestSharp.Authenticators.OAuth.OAuthTools._encoding">
@@ -380,14 +369,6 @@
             <param name="p">Parameter to add</param>
             <returns></returns>
         </member>
-        <member name="M:RestSharp.RestClientExtensions.RemoveDefaultParameter(RestSharp.IRestClient,System.String)">
-            <summary>
-            Removes a parameter from the default parameters that are used on every request made with this client instance
-            </summary>
-            <param name="restClient">The IRestClient instance</param>
-            <param name="name">The name of the parameter that needs to be removed</param>
-            <returns></returns>
-        </member>
         <member name="M:RestSharp.RestClientExtensions.AddDefaultParameter(RestSharp.IRestClient,System.String,System.Object)">
             <summary>
             Adds a HTTP parameter (QueryString for GET, DELETE, OPTIONS and HEAD; Encoded form for POST and PUT)
@@ -548,11 +529,6 @@
             HttpWebRequest wrapper (async methods)
             </summary>
         </member>
-        <member name="P:RestSharp.IHttp.RequestBodyBytes">
-            <summary>
-            An alternative to RequestBody, for when the caller already has the byte array.
-            </summary>
-        </member>
         <member name="M:RestSharp.Http.Post">
             <summary>
             Execute a POST request
@@ -667,11 +643,6 @@
             The System.Net.CookieContainer to be used for the request
             </summary>
         </member>
-        <member name="P:RestSharp.Http.ResponseWriter">
-            <summary>
-            The method to use to write the response instead of reading into RawBytes
-            </summary>
-        </member>
         <member name="P:RestSharp.Http.Files">
             <summary>
             Collection of files to be sent with request
@@ -715,11 +686,6 @@
         <member name="P:RestSharp.Http.RequestContentType">
             <summary>
             Content type of the request body.
-            </summary>
-        </member>
-        <member name="P:RestSharp.Http.RequestBodyBytes">
-            <summary>
-            An alternative to RequestBody, for when the caller already has the byte array.
             </summary>
         </member>
         <member name="P:RestSharp.Http.Url">
@@ -1402,11 +1368,6 @@
             By default the included XmlSerializer is used.
             </summary>
         </member>
-        <member name="P:RestSharp.IRestRequest.ResponseWriter">
-            <summary>
-            Set this to write response to Stream rather than reading into memory.
-            </summary>
-        </member>
         <member name="P:RestSharp.IRestRequest.Parameters">
             <summary>
             Container of all HTTP parameters to be passed with the request. 
@@ -1840,12 +1801,6 @@
             X509CertificateCollection to be sent with request
             </summary>
         </member>
-        <member name="P:RestSharp.RestClient.Proxy">
-            <summary>
-            Proxy to use for requests made by this client instance.
-            Passed on to underying WebRequest if set.
-            </summary>
-        </member>
         <member name="P:RestSharp.RestClient.FollowRedirects">
             <summary>
             Default is true. Determine whether or not requests that result in 
@@ -1885,6 +1840,12 @@
             <example>
             client.BaseUrl = "http://example.com";
             </example>
+        </member>
+        <member name="P:RestSharp.RestClient.Proxy">
+            <summary>
+            Proxy to use for requests made by this client instance.
+            Passed on to underying WebRequest if set.
+            </summary>
         </member>
         <member name="T:RestSharp.RestRequest">
             <summary>
@@ -2075,11 +2036,6 @@
             <summary>
             Serializer to use when writing XML request bodies. Used if RequestFormat is Xml.
             By default the included XmlSerializer is used.
-            </summary>
-        </member>
-        <member name="P:RestSharp.RestRequest.ResponseWriter">
-            <summary>
-            Set this to write response to Stream rather than reading into memory.
             </summary>
         </member>
         <member name="P:RestSharp.RestRequest.Parameters">
@@ -2450,17 +2406,6 @@
             The internal member dictionary.
             </summary>
         </member>
-        <member name="M:RestSharp.JsonObject.#ctor">
-            <summary>
-            Initializes a new instance of <see cref="T:RestSharp.JsonObject"/>.
-            </summary>
-        </member>
-        <member name="M:RestSharp.JsonObject.#ctor(System.Collections.Generic.IEqualityComparer{System.String})">
-            <summary>
-            Initializes a new instance of <see cref="T:RestSharp.JsonObject"/>.
-            </summary>
-            <param name="comparer">The <see cref="T:System.Collections.Generic.IEqualityComparer`1"/> implementation to use when comparing keys, or null to use the default <see cref="T:System.Collections.Generic.EqualityComparer`1"/> for the type of the key.</param>
-        </member>
         <member name="M:RestSharp.JsonObject.Add(System.String,System.Object)">
             <summary>
             Adds the specified key.
@@ -2474,7 +2419,7 @@
             </summary>
             <param name="key">The key.</param>
             <returns>
-                <c>true</c> if the specified key contains key; otherwise, <c>false</c>.
+            	<c>true</c> if the specified key contains key; otherwise, <c>false</c>.
             </returns>
         </member>
         <member name="M:RestSharp.JsonObject.Remove(System.String)">
@@ -2609,7 +2554,7 @@
             <param name="json">
             A JSON string.
             </param>
-            <param name="obj">
+            <param name="object">
             The object.
             </param>
             <returns>

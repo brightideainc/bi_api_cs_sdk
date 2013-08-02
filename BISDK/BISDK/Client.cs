@@ -27,7 +27,7 @@ namespace BISDK
                 {
                     PersistentDataManager.SetPersistentData("access_token", _accessToken);
                 }
-                this.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(_accessToken, "Bearer");
+                this.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(_accessToken);
             }
         }
 
