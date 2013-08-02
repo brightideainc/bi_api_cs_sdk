@@ -54,11 +54,17 @@ namespace BISDK
         public PersistentDataManager PersistentDataManager;
         public const string DefaultDomain = "https://auth.brightidea.com";
         public bool MasterAuthentication = false;
+        protected string _customDomain;
         public string CustomDomain
         {
+            get
+            {
+                return _customDomain;
+            }
             set
             {
                 this.BaseUrl = "https://" + value;
+                _customDomain = value;
             }
         }
 
@@ -105,7 +111,7 @@ namespace BISDK
                 RefreshToken = (string)responseObject["refresh_token"];
             }
 
-            if (responseObject["systems"] != null)
+            if (CustomDomain==null && responseObject["systems"] != null)
             {
                 JArray Systems = (JArray)responseObject["systems"];
                 if (Systems.Count > 0)
