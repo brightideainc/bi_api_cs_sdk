@@ -2,7 +2,9 @@ C# SDK for the new API
 =============
 
 ## Get Started:
-    * Instructions
+* Download precompiled binary: https://s3.amazonaws.com/biaws/bi_api_cs_sdk.zip
+* Add BISDK.dll and RestSharp.dll to References
+* add `using BISDK;` to the class
 
 ## Basic Usage:
 
